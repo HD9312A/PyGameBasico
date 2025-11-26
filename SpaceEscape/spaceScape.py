@@ -27,6 +27,7 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 pygame.display.set_caption("🚀 Space Escape")
+SHIELD_LIVES = 3
 
 # ----------------------------------------------------------
 # 🧩 SEÇÃO DE ASSETS (os alunos podem trocar os arquivos aqui)
@@ -41,7 +42,9 @@ ASSETS = {
     "player": "ship1.png",                         # imagem da nave
     "player2": "ship2.png",                        # imagem da nave
     "meteor": "meteoro001.png",                    # imagem do meteoro
-    "meteor2": "meteoro002.png",                   # imagem do meteoro especial
+    "meteor2": "meteoro002.png",                   # imagem do meteoro especial de vida
+    "meteor3": "meteoro003.png",  # imagem do meteoro especial de dano duplo
+    "meteor4": "meteoro004.png",  # imagem do meteoro especial de invulnerabilidade
     "sound_point": "classic-game-action-positive-9-224399.mp3",         # som ao destruir meteoro. direitos: Music by floraphonic from Pixabay
     "sound_hit": "stab-f-01-brvhrtz-224599.mp3",                        # som de colisão
     "sound_hit_stage2": "large-underwater-explosion-190270.mp3",        # som de colisão
@@ -85,6 +88,8 @@ player_img = load_image(ASSETS["player"], BLUE, (50, 30))
 player2_img = load_image(ASSETS["player2"], BLUE, (50, 30))
 meteor_img = load_image(ASSETS["meteor"], RED, (30, 30))
 meteor2_img = load_image(ASSETS["meteor2"], BLUE, (30, 30))
+meteor3_img = load_image(ASSETS["meteor3"], RED, (30, 30))
+meteor4_img = load_image(ASSETS["meteor4"], BLUE, (30, 30))
 
 # Sons
 def load_sound(filename):
@@ -113,25 +118,22 @@ player_speed = 7
 
 meteor_list = []
 meteor2_list = []
+meteor3_list = []
+meteor4_list = []
 meteor_list_speed = []
 meteor2_list_speed = []
+meteor3_list_speed = []
+meteor4_list_speed = []
 meteor_list_speed_stage2 = []
 meteor_list_speed_stage3 = []
 
-for _ in range(5):
+
+for _ in range(4):
     x = random.randint(0, WIDTH - 40)
     y = random.randint(-500, -40)
     meteor_list.append(pygame.Rect(x, y, 40, 40))
     meteor_list_speed.append(random.randint(1, 5))
-
-for _ in range(5):
-    x = random.randint(0, WIDTH - 40)
-    y = random.randint(-500, -40)
     meteor_list_speed_stage2.append(random.randint(5, 8))
-
-for _ in range(5):
-    x = random.randint(0, WIDTH - 40)
-    y = random.randint(-500, -40)
     meteor_list_speed_stage3.append(random.randint(8, 12))
 
 for _ in range(1):
@@ -140,8 +142,22 @@ for _ in range(1):
     meteor2_list.append(pygame.Rect(x, y, 40, 40))
     meteor2_list_speed.append(random.randint(1, 3))
 
+for _ in range(2):
+    x = random.randint(0, WIDTH - 40)
+    y = random.randint(-500, -40)
+    meteor3_list.append(pygame.Rect(x, y, 40, 40))
+    meteor3_list_speed.append(random.randint(1, 3))
+
+for _ in range(1):
+    x = random.randint(0, WIDTH - 40)
+    y = random.randint(-500, -40)
+    meteor4_list.append(pygame.Rect(x, y, 40, 40))
+    meteor4_list_speed.append(random.randint(1, 3))
+
 score = 0
 lives = 3
+shield_lives_player1 = 0
+shield_lives_player2 = 0
 font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
 running = True
@@ -286,6 +302,24 @@ while running:
             if lives <= 0:
                 running = False
 
+    for index, meteor in enumerate(meteor4_list):
+        meteor.y += meteor4_list_speed[index]
+
+        if meteor.y > HEIGHT:
+            meteor.y = random.randint(-100, -40)
+            meteor.x = random.randint(0, WIDTH - meteor.width)
+
+        if meteor.colliderect(player_rect):
+            meteor.y = random.randint(-100, -40)
+            meteor.x = random.randint(0, WIDTH - meteor.width)
+            shield_lives_player1 = SHIELD_LIVES
+
+
+        if meteor.colliderect(player_rect2):
+            meteor.y = random.randint(-100, -40)
+            meteor.x = random.randint(0, WIDTH - meteor.width)
+            shield_lives_player2 = SHIELD_LIVES
+
 
     # --- Movimento dos meteoros ---
     for index, meteor in enumerate(meteor_list):
@@ -299,7 +333,10 @@ while running:
 
         # Colisão
         if meteor.colliderect(player_rect):
-            lives -= 1
+            if shield_lives_player1 > 0:
+                shield_lives_player1 -= 1
+            else:
+                lives -= 1
             meteor.y = random.randint(-100, -40)
             meteor.x = random.randint(0, WIDTH - meteor.width)
             if sound_hit:
@@ -308,7 +345,10 @@ while running:
                 running = False
 
         if meteor.colliderect(player_rect2):
-            lives -= 1
+            if shield_lives_player2 > 0:
+                shield_lives_player2 -= 1
+            else:
+                lives -= 1
             meteor.y = random.randint(-100, -40)
             meteor.x = random.randint(0, WIDTH - meteor.width)
             if sound_hit:
@@ -325,6 +365,55 @@ while running:
                 if sound_point:
                     sound_point.play()
 
+        # --- Movimento dos meteoros ---
+        for index, meteor in enumerate(meteor3_list):
+            meteor.y += meteor3_list_speed[index]
+
+            # Saiu da tela → reposiciona e soma pontos
+            if meteor.y > HEIGHT:
+                meteor.y = random.randint(-100, -40)
+                meteor.x = random.randint(0, WIDTH - meteor.width)
+
+            # Colisão
+            if meteor.colliderect(player_rect):
+                if shield_lives_player1 > 1:
+                    shield_lives_player1 -= 2
+                elif shield_lives_player1 > 0:
+                    shield_lives_player1 -= 1
+                    lives -= 1
+                else:
+                    lives -= 1
+                meteor.y = random.randint(-100, -40)
+                meteor.x = random.randint(0, WIDTH - meteor.width)
+                if sound_hit:
+                    sound_hit.play()
+                if lives <= 0:
+                    running = False
+
+            if meteor.colliderect(player_rect2):
+                if shield_lives_player2 > 1:
+                    shield_lives_player2 -= 2
+                elif shield_lives_player2 > 0:
+                    shield_lives_player2 -= 1
+                    lives -= 1
+                else:
+                    lives -= 2
+                meteor.y = random.randint(-100, -40)
+                meteor.x = random.randint(0, WIDTH - meteor.width)
+                if sound_hit:
+                    sound_hit.play()
+                if lives <= 0:
+                    running = False
+
+            for bullet in bullets:
+                if bullet.colliderect(meteor):
+                    bullets.remove(bullet)
+                    meteor.x = random.randint(0, WIDTH - meteor.width)
+                    meteor.y = 0
+                    score += 1
+                    if sound_point:
+                        sound_point.play()
+
 
     # --- Desenha tudo ---
     screen.blit(player_img, player_rect)
@@ -339,9 +428,15 @@ while running:
     for meteor in meteor2_list:
         screen.blit(meteor2_img, meteor)
 
+    for meteor in meteor3_list:
+        screen.blit(meteor3_img, meteor)
+
+    for meteor in meteor4_list:
+        screen.blit(meteor4_img, meteor)
+
     # --- Exibe pontuação e vidas ---
-    text = font.render(f"Pontos: {score}   Vidas: {lives}", True, WHITE)
-    screen.blit(text, (300, 10))
+    text = font.render(f"Pontos: {score}   Vidas: {lives}  Escudo jogador 1: {shield_lives_player1}   Escudo jogador 2: {shield_lives_player2}", True, WHITE)
+    screen.blit(text, (50, 10))
 
     pygame.display.flip()
 
