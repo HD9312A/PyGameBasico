@@ -36,9 +36,12 @@ SHIELD_LIVES = 3
 # e troque apenas os nomes abaixo.
 
 ASSETS = {
+    "background_main_screen": "background_inicio.jpg",  # imagem de fundo no começo do jogo
     "background": "background1.jpg",               # imagem de fundo
     "background2": "background2.png",              # imagem de fundo
     "background3": "background3.png",              # imagem de fundo
+    "background_success": "background1.jpg",  # imagem de fundo ao zerar o jogo
+    "background_gameover": "background_gameover.jpg",  # imagem de fundo ao perder o jogo
     "player": "ship1.png",                         # imagem da nave
     "player2": "ship2.png",                        # imagem da nave
     "meteor": "meteoro001.png",                    # imagem do meteoro
@@ -49,6 +52,9 @@ ASSETS = {
     "sound_hit": "stab-f-01-brvhrtz-224599.mp3",                        # som de colisão
     "sound_hit_stage2": "large-underwater-explosion-190270.mp3",        # som de colisão
     "sound_hit_meteor2": "energy-2-90733.mp3",                          # som de colisão com meteoro especial. Music by freesound_community from Pixabay
+    "music_main_screen": "deep-ambient-electronic-theme-music-loading-screen-menu-dejcoart-429846.mp3",  # música de fundo. direitos: Music by dejcomin from Pixabay
+    "music_success": "loneliness-of-the-winner-110416.mp3",             # música de fundo. direitos: Music by AmarantaMusic from Pixabay
+    "music_game_over": "11_aokami-yume-the-dying-hope-441856.mp3",  # música de fundo. direitos: Music by AokamiYume from Pixabay
     "music1": "chill-synthwave-211190.mp3",                             # música de fundo. direitos: Music by The_Mountain from Pixabay
     "music2": "moebius-21329.mp3",                                      # música de fundo. direitos: Music by Eidunn from Pixabay
     "music3": "synthwave-80s-retro-background-music-400483.mp3"         # música de fundo. direitos: Music by lNPLUSMUSIC from Pixabay
@@ -81,6 +87,9 @@ def load_image(filename, fallback_color, size=None):
         return surf
 
 # Carrega imagens
+background_main_screen = load_image(ASSETS["background_main_screen"], WHITE, (WIDTH, HEIGHT))
+background_success = load_image(ASSETS["background_success"], WHITE, (WIDTH, HEIGHT))
+background_gameover = load_image(ASSETS["background_gameover"], WHITE, (WIDTH, HEIGHT))
 background = load_image(ASSETS["background"], WHITE, (WIDTH, HEIGHT))
 background2 = load_image(ASSETS["background2"], WHITE, (WIDTH, HEIGHT))
 background3 = load_image(ASSETS["background3"], WHITE, (WIDTH, HEIGHT))
@@ -104,10 +113,6 @@ sound_hit.set_volume(0.3)
 sound_life = load_sound(ASSETS["sound_hit_meteor2"])
 sound_life.set_volume(0.3)
 
-# Música de fundo (opcional)
-pygame.mixer.music.load(ASSETS["music1"])
-pygame.mixer.music.set_volume(0.5)
-pygame.mixer.music.play(-1)  # loop infinito
 
 # ----------------------------------------------------------
 # 🧠 VARIÁVEIS DE JOGO
@@ -132,27 +137,27 @@ for _ in range(4):
     x = random.randint(0, WIDTH - 40)
     y = random.randint(-500, -40)
     meteor_list.append(pygame.Rect(x, y, 40, 40))
-    meteor_list_speed.append(random.randint(1, 5))
-    meteor_list_speed_stage2.append(random.randint(5, 8))
-    meteor_list_speed_stage3.append(random.randint(8, 12))
+    meteor_list_speed.append(random.randint(1, 2))
+    meteor_list_speed_stage2.append(random.randint(2, 4))
+    meteor_list_speed_stage3.append(random.randint(4, 6))
 
 for _ in range(1):
     x = random.randint(0, WIDTH - 40)
     y = random.randint(-500, -40)
     meteor2_list.append(pygame.Rect(x, y, 40, 40))
-    meteor2_list_speed.append(random.randint(1, 3))
+    meteor2_list_speed.append(random.randint(1, 2))
 
 for _ in range(2):
     x = random.randint(0, WIDTH - 40)
     y = random.randint(-500, -40)
     meteor3_list.append(pygame.Rect(x, y, 40, 40))
-    meteor3_list_speed.append(random.randint(1, 3))
+    meteor3_list_speed.append(random.randint(1, 2))
 
 for _ in range(1):
     x = random.randint(0, WIDTH - 40)
     y = random.randint(-500, -40)
     meteor4_list.append(pygame.Rect(x, y, 40, 40))
-    meteor4_list_speed.append(random.randint(1, 3))
+    meteor4_list_speed.append(random.randint(1, 2))
 
 score = 0
 lives = 3
@@ -179,10 +184,13 @@ except FileNotFoundError:
 # 🏁 TELA DE INICIO DE JOGO
 # ----------------------------------------------------------
 screen.fill((20, 20, 20))
-end_text = font.render("Início DE JOGO! Pressione qualquer tecla para começar.", True, BLUE)
+end_text = font.render("INÍCIO DE JOGO! Pressione qualquer tecla para começar.", True, BLUE)
 high_scores_text = font.render(f"High scores: ", True, WHITE)
 high_scores_reversed = sorted(high_scores, reverse=True)
-
+pygame.mixer.music.load(ASSETS["music_main_screen"])
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)  # loop infinito
+screen.blit(background_main_screen, (0, 0))
 screen.blit(end_text, (70, 260))
 screen.blit(high_scores_text, (300, 300))
 
@@ -213,6 +221,9 @@ BULLET_HEIGHT = 10
 BULLET_WIDTH = 4
 bullets = []
 
+pygame.mixer.music.load(ASSETS["music1"])
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)  # loop infinito
 while running:
     clock.tick(FPS)
     screen.blit(background, (0, 0))
@@ -236,6 +247,10 @@ while running:
             pygame.mixer.music.set_volume(0.5)
             pygame.mixer.music.play(-1)
             stage3 = False
+
+    if score > 199:
+        running = False
+
 
     # --- Eventos ---
     for event in pygame.event.get():
@@ -436,7 +451,7 @@ while running:
 
     # --- Exibe pontuação e vidas ---
     text = font.render(f"Pontos: {score}   Vidas: {lives}  Escudo jogador 1: {shield_lives_player1}   Escudo jogador 2: {shield_lives_player2}", True, WHITE)
-    screen.blit(text, (50, 10))
+    screen.blit(text, (25, 10))
 
     pygame.display.flip()
 
@@ -445,15 +460,37 @@ while running:
 # ----------------------------------------------------------
 pygame.mixer.music.stop()
 screen.fill((20, 20, 20))
-end_text = font.render("Fim de jogo! Pressione qualquer tecla para sair.", True, WHITE)
-final_score = font.render(f"Pontuação final: {score}", True, WHITE)
+
 high_scores.append(score)
 with open('main_save.txt', 'w', encoding='utf-8') as arquivo:
     arquivo.write(f"high_scores={high_scores}\n")
 
-screen.blit(end_text, (150, 260))
-screen.blit(final_score, (300, 300))
-pygame.display.flip()
+if score >= 200:
+    end_text = font.render("Parabéns! Você atingiu o máximo de pontos!", True, WHITE)
+    end_text2 = font.render("Pressione qualquer tecla para sair.", True, WHITE)
+    final_score = font.render(f"Pontuação final: {score}", True, WHITE)
+    pygame.mixer.music.load(ASSETS["music_success"])
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(-1)  # loop infinito
+    screen.blit(background_success, (0, 0))
+    screen.blit(end_text, (150, 200))
+    screen.blit(end_text2, (150, 300))
+    screen.blit(final_score, (300, 400))
+    pygame.display.flip()
+else:
+    end_text = font.render("Fim de jogo! Pressione qualquer tecla para sair.", True, WHITE)
+    final_score = font.render(f"Pontuação final: {score}", True, WHITE)
+    pygame.mixer.music.load(ASSETS["music_game_over"])
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(-1)  # loop infinito
+    screen.blit(background_gameover, (0, 0))
+    screen.blit(end_text, (150, 260))
+    screen.blit(final_score, (300, 300))
+    pygame.display.flip()
+
+
+
+
 
 waiting = True
 while waiting:
