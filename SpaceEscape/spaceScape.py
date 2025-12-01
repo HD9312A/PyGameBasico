@@ -11,8 +11,6 @@
 ##############################################################
 
 import ast
-from imaplib import Literal
-
 import pygame
 import random
 import os

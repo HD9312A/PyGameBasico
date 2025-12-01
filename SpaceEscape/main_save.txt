@@ -1,1 +1,1 @@
-high_scores=[21, 0, 5, 60, 28, 1, 50]
+high_scores=[2, 200]
